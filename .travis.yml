@@ -26,7 +26,7 @@ env:
     - ECDAA_CURVES=FP256BN,BN254,BN254CX,BLS383
     - ECDAA_BUILD_DIR=${TRAVIS_BUILD_DIR}/build
     - TPM_KEY_DIR=${ECDAA_BUILD_DIR}/test/tpm
-    - COVERITY_LOG=${ECDAA_BUILD_DIR}/cov-int/scm_log.txt
+    - COVERITY_LOG=${TRAVIS_BUILD_DIR}/cov-int/scm_log.txt
 
 jobs:
   include:
