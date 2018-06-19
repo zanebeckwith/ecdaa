@@ -175,13 +175,14 @@ jobs:
         build_command_prepend: "cmake .. -DCMAKE_BUILD_TYPE=Release -DECDAA_CURVES=${ECDAA_CURVES} -DBUILD_EXAMPLES=ON"
         build_command:   "cmake --build ."
         branch_pattern: coverity_scan
-
     before_install:
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - mkdir -p ${ECDAA_BUILD_DIR} 
       - cd ${ECDAA_BUILD_DIR}
       - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+    before_script:
+      - echo "In Before_script"
     script:
       - echo "Done. Coverity logs:"
       - cat ${COVERITY_LOG}
