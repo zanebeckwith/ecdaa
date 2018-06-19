@@ -179,7 +179,6 @@ jobs:
     install:
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
-    before_script:
       - mkdir -p ${ECDAA_BUILD_DIR} 
       - pushd ${ECDAA_BUILD_DIR}
       - cmake .. -DCMAKE_BUILD_TYPE=Release -DECDAA_CURVES=${ECDAA_CURVES} -DBUILD_EXAMPLES=ON
