@@ -173,7 +173,7 @@ jobs:
           description: "A C implementation of elliptic-curve-based Direct Anonymous Attestation signatures"
         notification_email: ecdaa-coverity-reports@xaptum.com
         build_command_prepend: "cmake .. -DCMAKE_BUILD_TYPE=Release -DECDAA_CURVES=${ECDAA_CURVES} -DBUILD_EXAMPLES=ON"
-        build_command:   "cmake --build . && cd ${TRAVIS_BUILD_DIR}"
+        build_command:   "cmake --build ."
         branch_pattern: coverity_scan
 
     before_install:
