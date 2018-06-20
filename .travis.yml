@@ -173,11 +173,14 @@ jobs:
           description: "A C implementation of elliptic-curve-based Direct Anonymous Attestation signatures"
         notification_email: ecdaa-coverity-reports@xaptum.com
         build_command:   "cmake --build ${ECDAA_BUILD_DIR}"
+        build_command_prepend: ""
         branch_pattern: coverity_scan
     before_install:
       - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+    install:
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
+    before_script:
       - mkdir -p ${ECDAA_BUILD_DIR} 
       - pushd ${ECDAA_BUILD_DIR}
       - cmake .. -DCMAKE_BUILD_TYPE=Release -DECDAA_CURVES=${ECDAA_CURVES} -DBUILD_EXAMPLES=ON
