@@ -61,13 +61,14 @@ int ecp_ZZZ_deserialize(ECP_ZZZ *point_out,
  * Hash a message into an ECP_ZZZ point.
  *
  * The curve point generated from the message m is found as follows
- *      (cf. "Hunting and Pecking with ECC Groups" in Dragonfly spec):
+ *      (cf. the Appendix of Chen and Li, "Flexible and Scalable Digital Signatures in TPM 2.0", 2013)
+
  *  1. Set i := 0 be a 32-bit unsigned integer.
  *  2. Compute x := H(i, m).
  *  3. Compute z := x**3 + ax + b mod q.
  *  4. Compute y := sqrt(z) mod q. If y does not exist, set i := i + 1,
- *      repeat step 2 if i < 232, otherwise, report failure.
- *  5. Set y to whichever of {y, q - y} has lowest-order bit equal to 0.
+ *      repeat step 2 if i < 2^32, otherwise, report failure.
+ *  5. Set y to min(y, q - y).
  *
  * Returns:
  *  i on success (i is 32-bit unsigned integer used in construction above)
