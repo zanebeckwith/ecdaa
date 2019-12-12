@@ -97,8 +97,6 @@ int ecp_ZZZ_deserialize(ECP_ZZZ *point_out,
 
 int32_t ecp_ZZZ_fromhash(ECP_ZZZ *point_out, const uint8_t *message, uint32_t message_length)
 {
-    // Following the Appendix of Chen and Li, 2013
-
     BIG_XXX curve_order;
     BIG_XXX_rcopy(curve_order, CURVE_Order_ZZZ);
 
@@ -109,6 +107,26 @@ int32_t ecp_ZZZ_fromhash(ECP_ZZZ *point_out, const uint8_t *message, uint32_t me
         // Check if generated point is on curve:
         //  (the 0 indicates we want the y-coord with lsb=0)
         if (ECP_ZZZ_setx(point_out, x, 0)) {
+
+            // Calculate q-y mod q
+            // (modulus of finite field minus the y-coord of the generated point).
+            BIG_XXX x_ignore;
+            BIG_XXX y;
+            ECP_ZZZ_get(x_ignore, y, point_out);
+            BIG_XXX q;
+            BIG_XXX_rcopy(q, Modulus_YYY);
+            BIG_XXX q_minus_y;
+            BIG_XXX_sub(q_minus_y, q, y);
+            BIG_XXX_mod(q_minus_y, q);
+
+            // If q-y is less than y, use that instead of y.
+            if (-1 == BIG_XXX_comp(q_minus_y, y)) {
+                // Don't need to check return, since we know it's on the curve
+                // (q-y mod modulus is just the modular-negative of the y-coordinate,
+                //  which is still a valid point for the curves we're using).
+                ECP_ZZZ_set(point_out, x, q_minus_y);
+            }
+
             // If on curve, and cofactor != 1, multiply by cofactor to get on correct subgroup.
             BIG_XXX cofactor;
             BIG_XXX_rcopy(cofactor, CURVE_Cof_ZZZ);
