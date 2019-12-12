@@ -21,6 +21,9 @@
 
 #include "internal-utilities/rand_pool.h"
 
+static
+void output_int32_bigendian(uint8_t* out, int32_t in);
+
 size_t ecp_ZZZ_length(void)
 {
     return ECP_ZZZ_LENGTH;
@@ -102,7 +105,9 @@ int32_t ecp_ZZZ_fromhash(ECP_ZZZ *point_out, const uint8_t *message, uint32_t me
 
     for (int32_t i=0; i < INT32_MAX; i++) {
         BIG_XXX x;
-        big_XXX_from_two_message_hash(&x, (uint8_t*)&i, sizeof(i), message, message_length);
+        uint8_t serialized_i[sizeof(int32_t)];
+        output_int32_bigendian(serialized_i, i);
+        big_XXX_from_two_message_hash(&x, serialized_i, sizeof(serialized_i), message, message_length);
         BIG_XXX_mod(x, curve_order);
         // Check if generated point is on curve:
         //  (the 0 indicates we want the y-coord with lsb=0)
@@ -173,5 +178,13 @@ void ecp_ZZZ_random_mod_order(BIG_XXX *big_out,
     }
     /* reduce modulo a BIG. Removes bias */
     BIG_XXX_dmod(*big_out,d,curve_order);
+}
+
+void output_int32_bigendian(uint8_t* out, int32_t in)
+{
+    out[0] = (uint8_t)(in >> 24);
+    out[1] = (uint8_t)(in >> 16);
+    out[2] = (uint8_t)(in >> 8);
+    out[3] = (uint8_t)(in);
 }
 
