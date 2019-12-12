@@ -102,7 +102,7 @@ int32_t ecp_ZZZ_fromhash(ECP_ZZZ *point_out, const uint8_t *message, uint32_t me
     BIG_XXX curve_order;
     BIG_XXX_rcopy(curve_order, CURVE_Order_ZZZ);
 
-    for (int32_t i=0; i < 232; i++) {
+    for (int32_t i=0; i < INT32_MAX; i++) {
         BIG_XXX x;
         big_XXX_from_two_message_hash(&x, (uint8_t*)&i, sizeof(i), message, message_length);
         BIG_XXX_mod(x, curve_order);
