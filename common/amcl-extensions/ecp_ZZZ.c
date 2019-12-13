@@ -21,8 +21,16 @@
 
 #include "internal-utilities/rand_pool.h"
 
+#include <string.h>
+
 static
 void output_int32_bigendian(uint8_t* out, int32_t in);
+
+static
+int do_ecp_ZZZ_fromhash(ECP_ZZZ *point_out,
+                        uint8_t *serialized_i_out,
+                        const uint8_t *message,
+                        uint32_t message_length);
 
 size_t ecp_ZZZ_length(void)
 {
@@ -98,52 +106,30 @@ int ecp_ZZZ_deserialize(ECP_ZZZ *point_out,
     return 0;
 }
 
-int32_t ecp_ZZZ_fromhash(ECP_ZZZ *point_out, const uint8_t *message, uint32_t message_length)
+int ecp_ZZZ_fromhash(ECP_ZZZ *point_out, const uint8_t *message, uint32_t message_length)
 {
-    BIG_XXX curve_order;
-    BIG_XXX_rcopy(curve_order, CURVE_Order_ZZZ);
+    uint8_t serialized_i[sizeof(int32_t)];
 
-    for (int32_t i=0; i < INT32_MAX; i++) {
-        BIG_XXX x;
-        uint8_t serialized_i[sizeof(int32_t)];
-        output_int32_bigendian(serialized_i, i);
-        big_XXX_from_two_message_hash(&x, serialized_i, sizeof(serialized_i), message, message_length);
-        BIG_XXX_mod(x, curve_order);
-        // Check if generated point is on curve:
-        //  (the 0 indicates we want the y-coord with lsb=0)
-        if (ECP_ZZZ_setx(point_out, x, 0)) {
+    return do_ecp_ZZZ_fromhash(point_out, serialized_i, message, message_length);
+}
 
-            // Calculate q-y mod q
-            // (modulus of finite field minus the y-coord of the generated point).
-            BIG_XXX x_ignore;
-            BIG_XXX y;
-            ECP_ZZZ_get(x_ignore, y, point_out);
-            BIG_XXX q;
-            BIG_XXX_rcopy(q, Modulus_YYY);
-            BIG_XXX q_minus_y;
-            BIG_XXX_sub(q_minus_y, q, y);
-            BIG_XXX_mod(q_minus_y, q);
+int ecp_ZZZ_fromhash_pre(ECP_ZZZ *point_out,
+                         uint8_t *sc_out,
+                         uint16_t *sc_length_out,
+                         const uint8_t *message,
+                         uint32_t message_length)
+{
+    *sc_length_out = 0;
 
-            // If q-y is less than y, use that instead of y.
-            if (-1 == BIG_XXX_comp(q_minus_y, y)) {
-                // Don't need to check return, since we know it's on the curve
-                // (q-y mod modulus is just the modular-negative of the y-coordinate,
-                //  which is still a valid point for the curves we're using).
-                ECP_ZZZ_set(point_out, x, q_minus_y);
-            }
+    int ret = do_ecp_ZZZ_fromhash(point_out, sc_out, message, message_length);
 
-            // If on curve, and cofactor != 1, multiply by cofactor to get on correct subgroup.
-            BIG_XXX cofactor;
-            BIG_XXX_rcopy(cofactor, CURVE_Cof_ZZZ);
-            if (!BIG_XXX_isunity(cofactor)) {
-                ECP_ZZZ_mul(point_out, cofactor);
-            }
-            return i;
-        }
+    if (ret >= 0) {
+        // Concatenate (i | message)
+        *sc_length_out = sizeof(int32_t) + (uint16_t)message_length;
+        memcpy(sc_out + sizeof(int32_t), message, message_length);
     }
 
-    // If we reach here, we ran out of tries, so return error.
-    return -1;
+    return ret;
 }
 
 void ecp_ZZZ_random_mod_order(BIG_XXX *big_out,
@@ -186,5 +172,55 @@ void output_int32_bigendian(uint8_t* out, int32_t in)
     out[1] = (uint8_t)(in >> 16);
     out[2] = (uint8_t)(in >> 8);
     out[3] = (uint8_t)(in);
+}
+
+int do_ecp_ZZZ_fromhash(ECP_ZZZ *point_out,
+                        uint8_t *serialized_i_out,
+                        const uint8_t *message,
+                        uint32_t message_length)
+{
+    BIG_XXX curve_order;
+    BIG_XXX_rcopy(curve_order, CURVE_Order_ZZZ);
+
+    for (int32_t i=0; i < INT32_MAX; i++) {
+        BIG_XXX x;
+        output_int32_bigendian(serialized_i_out, i);
+        big_XXX_from_two_message_hash(&x, serialized_i_out, sizeof(int32_t), message, message_length);
+        BIG_XXX_mod(x, curve_order);
+        // Check if generated point is on curve:
+        //  (the 0 indicates we want the y-coord with lsb=0)
+        if (ECP_ZZZ_setx(point_out, x, 0)) {
+
+            // Calculate q-y mod q
+            // (modulus of finite field minus the y-coord of the generated point).
+            BIG_XXX x_ignore;
+            BIG_XXX y;
+            ECP_ZZZ_get(x_ignore, y, point_out);
+            BIG_XXX q;
+            BIG_XXX_rcopy(q, Modulus_YYY);
+            BIG_XXX q_minus_y;
+            BIG_XXX_sub(q_minus_y, q, y);
+            BIG_XXX_mod(q_minus_y, q);
+
+            // If q-y is less than y, use that instead of y.
+            if (-1 == BIG_XXX_comp(q_minus_y, y)) {
+                // Don't need to check return, since we know it's on the curve
+                // (q-y mod modulus is just the modular-negative of the y-coordinate,
+                //  which is still a valid point for the curves we're using).
+                ECP_ZZZ_set(point_out, x, q_minus_y);
+            }
+
+            // If on curve, and cofactor != 1, multiply by cofactor to get on correct subgroup.
+            BIG_XXX cofactor;
+            BIG_XXX_rcopy(cofactor, CURVE_Cof_ZZZ);
+            if (!BIG_XXX_isunity(cofactor)) {
+                ECP_ZZZ_mul(point_out, cofactor);
+            }
+            return 0;
+        }
+    }
+
+    // If we reach here, we ran out of tries, so return error.
+    return -1;
 }
 

@@ -169,7 +169,7 @@ int schnorr_verify_ZZZ(BIG_XXX c,
         ECP_ZZZ P2;
         ECP_ZZZ L;
         // 1ii) Find P2 by hashing basename
-        int32_t hash_ret = ecp_ZZZ_fromhash(&P2, basename, basename_len);
+        int hash_ret = ecp_ZZZ_fromhash(&P2, basename, basename_len);
         if (hash_ret < 0)
             return -2;
 
@@ -484,7 +484,7 @@ int commit(ECP_ZZZ *P1,
         if (NULL == s2 || 0 == s2_length || NULL == K)
             return -1;
 
-        int32_t hash_ret = ecp_ZZZ_fromhash(P2, s2, s2_length);
+        int hash_ret = ecp_ZZZ_fromhash(P2, s2, s2_length);
         if (hash_ret < 0)
             return -1;
         ECP_ZZZ_copy(L, P2);

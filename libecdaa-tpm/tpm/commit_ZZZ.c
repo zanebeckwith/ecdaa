@@ -62,24 +62,16 @@ int tpm_commit_ZZZ(struct ecdaa_tpm_context *tpm_ctx,
                 break;
             }
 
-            int32_t hash_ret;
-
-            if (s2_length > (sizeof(s2_tpm.buffer) - sizeof(hash_ret))) {
+            if (s2_length > (sizeof(s2_tpm.buffer) - sizeof(uint32_t))) {
                 ret = -3;
                 break;
             }
 
-            hash_ret = ecp_ZZZ_fromhash(&y2, s2, s2_length);
-            if (hash_ret < 0) {
-                ret = -3;
+            ret = ecp_ZZZ_fromhash_pre(&y2, (uint8_t*)s2_tpm.buffer, &s2_tpm.size, s2, s2_length);
+            if (ret < 0) {
                 break;
             }
             ecp_to_tpm_format(&y2_tpm, &y2);
-
-            // Concatenate (hash_ret | s2)
-            s2_tpm.size = (uint16_t)s2_length + sizeof(hash_ret);
-            memcpy(s2_tpm.buffer, &hash_ret, sizeof(hash_ret));
-            memcpy(s2_tpm.buffer + sizeof(hash_ret), s2, s2_length);
         }
 
         tpm_ctx->last_return_code = Tss2_Sys_Commit(tpm_ctx->sapi_context,

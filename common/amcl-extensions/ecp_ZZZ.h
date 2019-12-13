@@ -71,11 +71,19 @@ int ecp_ZZZ_deserialize(ECP_ZZZ *point_out,
  *  5. Set y to min(y, q - y).
  *
  * Returns:
- *  i on success (i is 32-bit unsigned integer used in construction above)
+ *  0 on success
  *  -1 on failure
  */
-int32_t ecp_ZZZ_fromhash(ECP_ZZZ *point_out, const uint8_t *message, uint32_t message_length);
+int ecp_ZZZ_fromhash(ECP_ZZZ *point_out, const uint8_t *message, uint32_t message_length);
 
+/*
+ * Same as ecp_ZZZ_fromhash, but also returns sc = [i | x] (see ecp_ZZZ_fromhash for details)
+ */
+int ecp_ZZZ_fromhash_pre(ECP_ZZZ *point_out,
+                         uint8_t *sc_out,
+                         uint16_t *sc_length_out,
+                         const uint8_t *message,
+                         uint32_t message_length);
 /*
  * Generate a uniformly-distributed pseudo-random number,
  * between [0, n], where n is the order of the EC group.
