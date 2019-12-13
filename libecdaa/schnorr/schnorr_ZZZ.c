@@ -57,6 +57,18 @@ void schnorr_keygen_ZZZ(ECP_ZZZ *public_out,
     ECP_ZZZ_mul(public_out, *private_out);
 }
 
+void schnorr_keygen_from_basepoint_ZZZ(ECP_ZZZ *public_out,
+                                  BIG_XXX *private_out,
+                                  ECP_ZZZ *basepoint,
+                                  ecdaa_rand_func get_random)
+{
+    ecp_ZZZ_random_mod_order(private_out, get_random);
+
+    ECP_ZZZ_copy(public_out, basepoint);
+
+    ECP_ZZZ_mul(public_out, *private_out);
+}
+
 int schnorr_sign_ZZZ(BIG_XXX *c_out,
                      BIG_XXX *s_out,
                      BIG_XXX *n_out,
