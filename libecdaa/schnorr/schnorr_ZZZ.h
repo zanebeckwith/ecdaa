@@ -43,6 +43,17 @@ void schnorr_keygen_ZZZ(ECP_ZZZ *public_out,
                         ecdaa_rand_func get_random);
 
 /*
+ * Generate a Schnorr public/private keypair, using a given basepoint.
+ *
+ * private_key = RAND(Z_p)
+ * public_key = private_key * basepoint
+ */
+void schnorr_keygen_from_basepoint_ZZZ(ECP_ZZZ *public_out,
+                                  BIG_XXX *private_out,
+                                  ECP_ZZZ *basepoint,
+                                  ecdaa_rand_func get_random);
+
+/*
  * Perform Schnorr signature of msg_in, allowing for a non-standard basepoint and basename.
  *
  * n_out = RAND(Z_p)
