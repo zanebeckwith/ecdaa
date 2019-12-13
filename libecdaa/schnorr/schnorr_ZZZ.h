@@ -49,19 +49,19 @@ void schnorr_keygen_ZZZ(ECP_ZZZ *public_out,
  * public_key = private_key * basepoint
  */
 void schnorr_keygen_from_basepoint_ZZZ(ECP_ZZZ *public_out,
-                                  BIG_XXX *private_out,
-                                  ECP_ZZZ *basepoint,
-                                  ecdaa_rand_func get_random);
+                                       BIG_XXX *private_out,
+                                       ECP_ZZZ *basepoint,
+                                       ecdaa_rand_func get_random);
 
 /*
  * Perform Schnorr signature of msg_in, allowing for a non-standard basepoint and basename.
  *
  * n_out = RAND(Z_p)
  * if basename:
- *  c = Hash ( RAND(Z_p)*basepoint | basepoint | public_key | RAND(Z_p)*P2 | P2 | [private_key]P2 | basename | msg_in )
+ *  c = Hash ( RAND(Z_p)*basepoint | generator | public_key | RAND(Z_p)*P2 | P2 | [private_key]P2 | basename | msg_in )
  *      where P2 = the curve point hashed from basename (cf. `ecp_ZZZ_fromhash`)
  * else:
- *  c = Hash ( RAND(Z_p)*basepoint | basepoint | public_key | msg_in )
+ *  c = Hash ( RAND(Z_p)*basepoint | generator | public_key | msg_in )
  * c_out = Hash ( n_out | c )
  * s_out = RAND(Z_p) + c_out * private_key
  *
@@ -79,6 +79,7 @@ int schnorr_sign_ZZZ(BIG_XXX *c_out,
                      ECP_ZZZ *K_out,
                      const uint8_t *msg_in,
                      uint32_t msg_len,
+                     ECP_ZZZ *generator,
                      ECP_ZZZ *basepoint,
                      ECP_ZZZ *public_key,
                      BIG_XXX private_key,
@@ -89,7 +90,7 @@ int schnorr_sign_ZZZ(BIG_XXX *c_out,
 /*
  * Verify that (c, s, n) is a valid Schnorr signature of msg_in, allowing for a non-standard basepoint.
  *
- * Check c = Hash(n | Hash( s*basepoint - c*public_key | basepoint | public_key | msg_in ) )
+ * Check c = Hash(n | Hash( s*basepoint - c*public_key | generator | public_key | msg_in ) )
  *
  * c and s must be reduced modulo group order (and thus normalized, too), first
  *
@@ -106,6 +107,7 @@ int schnorr_verify_ZZZ(BIG_XXX c,
                        ECP_ZZZ *K,
                        const uint8_t *msg_in,
                        uint32_t msg_len,
+                       ECP_ZZZ *generator,
                        ECP_ZZZ *basepoint,
                        ECP_ZZZ *public_key,
                        const uint8_t *basename,
