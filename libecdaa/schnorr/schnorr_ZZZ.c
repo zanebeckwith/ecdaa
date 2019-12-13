@@ -58,9 +58,9 @@ void schnorr_keygen_ZZZ(ECP_ZZZ *public_out,
 }
 
 void schnorr_keygen_from_basepoint_ZZZ(ECP_ZZZ *public_out,
-                                  BIG_XXX *private_out,
-                                  ECP_ZZZ *basepoint,
-                                  ecdaa_rand_func get_random)
+                                       BIG_XXX *private_out,
+                                       ECP_ZZZ *basepoint,
+                                       ecdaa_rand_func get_random)
 {
     ecp_ZZZ_random_mod_order(private_out, get_random);
 
@@ -75,6 +75,7 @@ int schnorr_sign_ZZZ(BIG_XXX *c_out,
                      ECP_ZZZ *K_out,
                      const uint8_t *msg_in,
                      uint32_t msg_len,
+                     ECP_ZZZ *generator,
                      ECP_ZZZ *basepoint,
                      ECP_ZZZ *public_key,
                      BIG_XXX private_key,
@@ -97,22 +98,22 @@ int schnorr_sign_ZZZ(BIG_XXX *c_out,
         if (NULL == basename || NULL == K_out)
             return -1;
 
-        // Compute c' = Hash( R | basepoint | public_key | L | P2 | K_out | basename | msg_in )
+        // Compute c' = Hash( R | generator | public_key | L | P2 | K_out | basename | msg_in )
         uint8_t hash_input_begin[SIX_ECP_LENGTH];
         assert(6*ECP_ZZZ_LENGTH == sizeof(hash_input_begin));
         ecp_ZZZ_serialize(hash_input_begin, &R);
-        ecp_ZZZ_serialize(hash_input_begin+ECP_ZZZ_LENGTH, basepoint);
+        ecp_ZZZ_serialize(hash_input_begin+ECP_ZZZ_LENGTH, generator);
         ecp_ZZZ_serialize(hash_input_begin+2*ECP_ZZZ_LENGTH, public_key);
         ecp_ZZZ_serialize(hash_input_begin+3*ECP_ZZZ_LENGTH, &L);
         ecp_ZZZ_serialize(hash_input_begin+4*ECP_ZZZ_LENGTH, &P2);
         ecp_ZZZ_serialize(hash_input_begin+5*ECP_ZZZ_LENGTH, K_out);
         big_XXX_from_three_message_hash(&c_prime, hash_input_begin, sizeof(hash_input_begin), basename, basename_len, msg_in, msg_len);
     } else {
-        // Compute c' = Hash( R | basepoint | public_key | msg_in )
+        // Compute c' = Hash( R | generator | public_key | msg_in )
         uint8_t hash_input_begin[THREE_ECP_LENGTH];
         assert(3*ECP_ZZZ_LENGTH == sizeof(hash_input_begin));
         ecp_ZZZ_serialize(hash_input_begin, &R);
-        ecp_ZZZ_serialize(hash_input_begin+ECP_ZZZ_LENGTH, basepoint);
+        ecp_ZZZ_serialize(hash_input_begin+ECP_ZZZ_LENGTH, generator);
         ecp_ZZZ_serialize(hash_input_begin+2*ECP_ZZZ_LENGTH, public_key);
         big_XXX_from_two_message_hash(&c_prime, hash_input_begin, sizeof(hash_input_begin), msg_in, msg_len);
     }
@@ -145,6 +146,7 @@ int schnorr_verify_ZZZ(BIG_XXX c,
                        ECP_ZZZ *K,
                        const uint8_t *msg_in,
                        uint32_t msg_len,
+                       ECP_ZZZ *generator,
                        ECP_ZZZ *basepoint,
                        ECP_ZZZ *public_key,
                        const uint8_t *basename,
@@ -197,22 +199,22 @@ int schnorr_verify_ZZZ(BIG_XXX c,
         // 4) Compute difference of L and c*K, and save to L (L = s*P2 - c*K)
         ECP_ZZZ_sub(&L, &K_c);
 
-        // c'' = Hash( R | basepoint | public_key | L | P2 | K | basename | msg_in )
+        // c'' = Hash( R | generator | public_key | L | P2 | K | basename | msg_in )
         uint8_t hash_input_begin[SIX_ECP_LENGTH];
         assert(6*ECP_ZZZ_LENGTH == sizeof(hash_input_begin));
         ecp_ZZZ_serialize(hash_input_begin, &R);
-        ecp_ZZZ_serialize(hash_input_begin+ECP_ZZZ_LENGTH, basepoint);
+        ecp_ZZZ_serialize(hash_input_begin+ECP_ZZZ_LENGTH, generator);
         ecp_ZZZ_serialize(hash_input_begin+2*ECP_ZZZ_LENGTH, public_key);
         ecp_ZZZ_serialize(hash_input_begin+3*ECP_ZZZ_LENGTH, &L);
         ecp_ZZZ_serialize(hash_input_begin+4*ECP_ZZZ_LENGTH, &P2);
         ecp_ZZZ_serialize(hash_input_begin+5*ECP_ZZZ_LENGTH, K);
         big_XXX_from_three_message_hash(&c_dbl_prime, hash_input_begin, sizeof(hash_input_begin), basename, basename_len, msg_in, msg_len);
     } else {
-        // c'' = Hash( R | basepoint | public_key | msg_in )
+        // c'' = Hash( R | generator | public_key | msg_in )
         uint8_t hash_input_begin[THREE_ECP_LENGTH];
         assert(3*ECP_ZZZ_LENGTH == sizeof(hash_input_begin));
         ecp_ZZZ_serialize(hash_input_begin, &R);
-        ecp_ZZZ_serialize(hash_input_begin+ECP_ZZZ_LENGTH, basepoint);
+        ecp_ZZZ_serialize(hash_input_begin+ECP_ZZZ_LENGTH, generator);
         ecp_ZZZ_serialize(hash_input_begin+2*ECP_ZZZ_LENGTH, public_key);
         big_XXX_from_two_message_hash(&c_dbl_prime, hash_input_begin, sizeof(hash_input_begin), msg_in, msg_len);
     }
