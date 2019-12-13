@@ -23,6 +23,7 @@
 #include <ecdaa/credential_ZZZ.h>
 #include <ecdaa/group_public_key_ZZZ.h>
 #include <ecdaa/issuer_keypair_ZZZ.h>
+#include <ecdaa/issuer_nonce_ZZZ.h>
 #include <ecdaa/member_keypair_ZZZ.h>
 #include <ecdaa/rand.h>
 #include <ecdaa/revocations_ZZZ.h>
