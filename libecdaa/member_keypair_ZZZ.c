@@ -36,23 +36,26 @@ size_t ecdaa_member_secret_key_ZZZ_length(void)
 
 int ecdaa_member_key_pair_ZZZ_generate(struct ecdaa_member_public_key_ZZZ *pk,
                                        struct ecdaa_member_secret_key_ZZZ *sk,
-                                       uint8_t *nonce,
-                                       uint32_t nonce_length,
+                                       struct ecdaa_issuer_nonce_ZZZ *nonce,
                                        ecdaa_rand_func get_random)
 {
     // 1) Generate Schnorr-type keypair,
-    schnorr_keygen_ZZZ(&pk->Q, &sk->sk, get_random);
+    //      Q = sk * B, where B is the B-value of the nonce.
+    schnorr_keygen_from_basepoint_ZZZ(&pk->Q, &sk->sk, &nonce->B, get_random);
 
-    // 2) and a Schnorr-type signature on the Schnorr-type public_key itself concatenated with the nonce.
-    ECP_ZZZ basepoint;
-    ecp_ZZZ_set_to_generator(&basepoint);
+    // 2) and a Schnorr-type signature on the Schnorr-type public_key itself concatenated with the `m`-value of the nonce.
+    const uint8_t *m;
+    ecdaa_issuer_nonce_ZZZ_access_m(&m, nonce);
+    ECP_ZZZ generator;
+    ecp_ZZZ_set_to_generator(&generator);
     int sign_ret = schnorr_sign_ZZZ(&pk->c,
                                     &pk->s,
                                     &pk->n,
                                     NULL,
-                                    nonce,
-                                    nonce_length,
-                                    &basepoint,
+                                    m,
+                                    ECDAA_ISSUER_NONCE_ZZZ_M_LENGTH,
+                                    &generator,
+                                    &nonce->B,
                                     &pk->Q,
                                     sk->sk,
                                     NULL,
@@ -63,20 +66,22 @@ int ecdaa_member_key_pair_ZZZ_generate(struct ecdaa_member_public_key_ZZZ *pk,
 }
 
 int ecdaa_member_public_key_ZZZ_validate(struct ecdaa_member_public_key_ZZZ *pk,
-                                         uint8_t *nonce_in,
-                                         uint32_t nonce_length)
+                                         struct ecdaa_issuer_nonce_ZZZ *nonce)
 {
     int ret = 0;
 
-    ECP_ZZZ basepoint;
-    ecp_ZZZ_set_to_generator(&basepoint);
+    ECP_ZZZ generator;
+    ecp_ZZZ_set_to_generator(&generator);
+    const uint8_t *m;
+    ecdaa_issuer_nonce_ZZZ_access_m(&m, nonce);
     int sign_ret = schnorr_verify_ZZZ(pk->c,
                                       pk->s,
                                       pk->n,
                                       NULL,
-                                      nonce_in,
-                                      nonce_length,
-                                      &basepoint,
+                                      m,
+                                      ECDAA_ISSUER_NONCE_ZZZ_M_LENGTH,
+                                      &generator,
+                                      &nonce->B,
                                       &pk->Q,
                                       NULL,
                                       0);
@@ -121,8 +126,7 @@ int ecdaa_member_public_key_ZZZ_serialize_fp(FILE* fp,
 
 int ecdaa_member_public_key_ZZZ_deserialize(struct ecdaa_member_public_key_ZZZ *pk_out,
                                             uint8_t *buffer_in,
-                                            uint8_t *nonce_in,
-                                            uint32_t nonce_length)
+                                            struct ecdaa_issuer_nonce_ZZZ *nonce)
 {
     int ret = 0;
 
@@ -134,7 +138,7 @@ int ecdaa_member_public_key_ZZZ_deserialize(struct ecdaa_member_public_key_ZZZ *
     if (0 == deserial_ret) {
         // 3) Verify the schnorr signature.
         //  (This also verifies that the public key is valid).
-        int schnorr_ret = ecdaa_member_public_key_ZZZ_validate(pk_out, nonce_in, nonce_length);
+        int schnorr_ret = ecdaa_member_public_key_ZZZ_validate(pk_out, nonce);
         if (0 != schnorr_ret)
             ret = -2;
     }
@@ -144,15 +148,14 @@ int ecdaa_member_public_key_ZZZ_deserialize(struct ecdaa_member_public_key_ZZZ *
 
 int ecdaa_member_public_key_ZZZ_deserialize_file(struct ecdaa_member_public_key_ZZZ *pk_out,
                                             const char* file,
-                                            uint8_t *nonce,
-                                            uint32_t nonce_len)
+                                            struct ecdaa_issuer_nonce_ZZZ *nonce)
 {
     uint8_t buffer[ECDAA_MEMBER_PUBLIC_KEY_ZZZ_LENGTH] = {0};
     int read_ret = ecdaa_read_from_file(buffer, ECDAA_MEMBER_PUBLIC_KEY_ZZZ_LENGTH, file);
     if (ECDAA_MEMBER_PUBLIC_KEY_ZZZ_LENGTH != read_ret) {
         return read_ret;
     }
-    int deserialize_ret = ecdaa_member_public_key_ZZZ_deserialize(pk_out, buffer, (uint8_t*)nonce, (uint32_t)nonce_len);
+    int deserialize_ret = ecdaa_member_public_key_ZZZ_deserialize(pk_out, buffer, nonce);
     if (0 != deserialize_ret) {
         return DESERIALIZE_KEY_ERROR;
     }
@@ -161,15 +164,14 @@ int ecdaa_member_public_key_ZZZ_deserialize_file(struct ecdaa_member_public_key_
 
 int ecdaa_member_public_key_ZZZ_deserialize_fp(struct ecdaa_member_public_key_ZZZ *pk_out,
                                             FILE* file,
-                                            uint8_t *nonce,
-                                            uint32_t nonce_len)
+                                            struct ecdaa_issuer_nonce_ZZZ *nonce)
 {
     uint8_t buffer[ECDAA_MEMBER_PUBLIC_KEY_ZZZ_LENGTH] = {0};
     int read_ret = ecdaa_read_from_fp(buffer, ECDAA_MEMBER_PUBLIC_KEY_ZZZ_LENGTH, file);
     if (ECDAA_MEMBER_PUBLIC_KEY_ZZZ_LENGTH != read_ret) {
         return read_ret;
     }
-    int deserialize_ret = ecdaa_member_public_key_ZZZ_deserialize(pk_out, buffer, (uint8_t*)nonce, (uint32_t)nonce_len);
+    int deserialize_ret = ecdaa_member_public_key_ZZZ_deserialize(pk_out, buffer, nonce);
     if (0 != deserialize_ret) {
         return DESERIALIZE_KEY_ERROR;
     }

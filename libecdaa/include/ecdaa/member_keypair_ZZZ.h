@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include <ecdaa/issuer_nonce_ZZZ.h>
+
 #include <ecdaa/rand.h>
 
 #include <amcl/big_XXX.h>
@@ -63,8 +65,7 @@ size_t ecdaa_member_secret_key_ZZZ_length(void);
  */
 int ecdaa_member_key_pair_ZZZ_generate(struct ecdaa_member_public_key_ZZZ *pk_out,
                                        struct ecdaa_member_secret_key_ZZZ *sk_out,
-                                       uint8_t *nonce,
-                                       uint32_t nonce_length,
+                                       struct ecdaa_issuer_nonce_ZZZ *nonce,
                                        ecdaa_rand_func get_random);
 
 /*
@@ -75,8 +76,7 @@ int ecdaa_member_key_pair_ZZZ_generate(struct ecdaa_member_public_key_ZZZ *pk_ou
  * -1 if signature is not valid.
  */
 int ecdaa_member_public_key_ZZZ_validate(struct ecdaa_member_public_key_ZZZ *pk,
-                                         uint8_t *nonce_in,
-                                         uint32_t nonce_length);
+                                         struct ecdaa_issuer_nonce_ZZZ *nonce);
 
 /*
  * Serialize an `ecdaa_member_public_key_ZZZ`
@@ -98,7 +98,7 @@ int ecdaa_member_public_key_ZZZ_serialize_fp(FILE* fp,
 /*
  * De-serialize an `ecdaa_member_public_key_ZZZ`, and check its validity and signature.
  *
- * The `nonce_in` should be the nonce
+ * The `nonce` should be the `ecdaa_issuer_nonce`
  *  provided by the Issuer when the Member generated this public key.
  *
  * The serialized format is expected to be:
@@ -111,19 +111,16 @@ int ecdaa_member_public_key_ZZZ_serialize_fp(FILE* fp,
  * -2 if  (c,s,n) don't verify
  */
 int ecdaa_member_public_key_ZZZ_deserialize(struct ecdaa_member_public_key_ZZZ *pk_out,
-                                             uint8_t *buffer_in,
-                                             uint8_t *nonce_in,
-                                             uint32_t nonce_length);
+                                            uint8_t *buffer_in,
+                                            struct ecdaa_issuer_nonce_ZZZ *nonce);
 
 int ecdaa_member_public_key_ZZZ_deserialize_file(struct ecdaa_member_public_key_ZZZ *pk_out,
                                             const char* file,
-                                            uint8_t *nonce_in,
-                                            uint32_t nonce_length);
+                                            struct ecdaa_issuer_nonce_ZZZ *nonce);
 
 int ecdaa_member_public_key_ZZZ_deserialize_fp(struct ecdaa_member_public_key_ZZZ *pk_out,
                                             FILE* file,
-                                            uint8_t *nonce_in,
-                                            uint32_t nonce_length);
+                                            struct ecdaa_issuer_nonce_ZZZ *nonce);
 
 /*
  * De-serialize an `ecdaa_member_public_key_ZZZ`, check its validity, but NOT its signature.
