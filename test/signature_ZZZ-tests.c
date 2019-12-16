@@ -57,6 +57,7 @@ typedef struct sign_and_verify_fixture {
     struct ecdaa_issuer_public_key_ZZZ ipk;
     struct ecdaa_issuer_secret_key_ZZZ isk;
     struct ecdaa_credential_ZZZ cred;
+    struct ecdaa_issuer_nonce_ZZZ nonce;
 } sign_and_verify_fixture;
 
 static void setup(sign_and_verify_fixture* fixture);
@@ -80,6 +81,7 @@ int main()
 
 static void setup(sign_and_verify_fixture* fixture)
 {
+    // Mock issuer secret key
     ecp_ZZZ_random_mod_order(&fixture->isk.x, test_randomness);
     ecp2_ZZZ_set_to_generator(&fixture->ipk.gpk.X);
     ECP2_ZZZ_mul(&fixture->ipk.gpk.X, fixture->isk.x);
@@ -88,12 +90,17 @@ static void setup(sign_and_verify_fixture* fixture)
     ecp2_ZZZ_set_to_generator(&fixture->ipk.gpk.Y);
     ECP2_ZZZ_mul(&fixture->ipk.gpk.Y, fixture->isk.y);
 
-    ecp_ZZZ_set_to_generator(&fixture->pk.Q);
+    // Mock issuer nonce (only need B)
+    ecp_ZZZ_set_to_generator(&fixture->nonce.B);
+    BIG_XXX mock_m;
+    ecp_ZZZ_random_mod_order(&mock_m, test_randomness);
+    ECP_ZZZ_mul(&fixture->nonce.B, mock_m);
+
+    ECP_ZZZ_copy(&fixture->pk.Q, &fixture->nonce.B);
     ecp_ZZZ_random_mod_order(&fixture->sk.sk, test_randomness);
     ECP_ZZZ_mul(&fixture->pk.Q, fixture->sk.sk);
 
-    struct ecdaa_credential_ZZZ_signature cred_sig;
-    ecdaa_credential_ZZZ_generate(&fixture->cred, &cred_sig, &fixture->isk, &fixture->pk, test_randomness);
+    ecdaa_credential_ZZZ_generate(&fixture->cred, &fixture->isk, &fixture->pk, &fixture->nonce);
 
     fixture->msg = (uint8_t*) "Test message";
     fixture->msg_len = (uint32_t)strlen((char*)fixture->msg);
