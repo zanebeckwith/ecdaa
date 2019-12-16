@@ -104,49 +104,6 @@ int schnorr_verify_ZZZ(BIG_XXX c,
                        uint32_t basename_len);
 
 /*
- * Perform an 'credential-Schnorr' signature, used by an Issuer when signing credentials.
- *
- * c_out = Hash ( r*generator | r*member_public_key | generator | B | member_public_key | D ),
- * s_out = s = r + c_out * private_key,
- *  where r = RAND(Z_p),
- *  B and D are the corresponding values of an `ecdaa_credential`,
- *  public_key is the requesting Member's public key,
- *
- * c_out and s_out will be reduced modulo the group order (and thus normalized) upon return
- *
- *  Returns:
- *   0 on success
- */
-int credential_schnorr_sign_ZZZ(BIG_XXX *c_out,
-                                BIG_XXX *s_out,
-                                ECP_ZZZ *B,
-                                ECP_ZZZ *member_public_key,
-                                ECP_ZZZ *D,
-                                BIG_XXX issuer_private_key_y,
-                                BIG_XXX credential_random,
-                                ecdaa_rand_func get_random);
-
-/*
- * Verify that (c, s) is a valid 'credential-Schnorr' signature.
- *
- * Check c = Hash( s*generator - c*B | s*public_key - c*D | generator | B | member_public_key | D ),
- *
- * c and s must be reduced modulo group order (and thus normalized, too), first
- *
- * NOTE: Because this is used as part of a verification process,
- * THE VALIDITY OF B, member_public_key, AND D ARE NOT CHECKED.
- *
- * Returns:
- *  0 on success
- *  -1 if (c, s) is not a valid signature
- */
-int credential_schnorr_verify_ZZZ(BIG_XXX c,
-                                  BIG_XXX s,
-                                  ECP_ZZZ *B,
-                                  ECP_ZZZ *member_public_key,
-                                  ECP_ZZZ *D);
-
-/*
  * Perform an 'issuer-Schnorr' signature, used by an Issuer when creating its own key-pair.
  *
  * c_out = Hash ( rx*generator_2 | ry*generator_2 | generator_2 | X | Y ),
