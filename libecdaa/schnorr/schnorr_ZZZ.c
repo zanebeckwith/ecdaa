@@ -46,17 +46,6 @@ int commit(ECP_ZZZ *P1,
            ECP_ZZZ *E,
            ecdaa_rand_func get_random);
 
-void schnorr_keygen_ZZZ(ECP_ZZZ *public_out,
-                        BIG_XXX *private_out,
-                        ecdaa_rand_func get_random)
-{
-    ecp_ZZZ_random_mod_order(private_out, get_random);
-
-    ecp_ZZZ_set_to_generator(public_out);
-
-    ECP_ZZZ_mul(public_out, *private_out);
-}
-
 void schnorr_keygen_from_basepoint_ZZZ(ECP_ZZZ *public_out,
                                        BIG_XXX *private_out,
                                        ECP_ZZZ *basepoint,
