@@ -33,16 +33,6 @@ extern "C" {
 #include <stdint.h>
 
 /*
- * Generate a Schnorr public/private keypair.
- *
- * private_key = RAND(Z_p)
- * public_key = private_key * group_generator
- */
-void schnorr_keygen_ZZZ(ECP_ZZZ *public_out,
-                        BIG_XXX *private_out,
-                        ecdaa_rand_func get_random);
-
-/*
  * Generate a Schnorr public/private keypair, using a given basepoint.
  *
  * private_key = RAND(Z_p)
