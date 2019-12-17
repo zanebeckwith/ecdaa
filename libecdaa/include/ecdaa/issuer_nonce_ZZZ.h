@@ -33,24 +33,12 @@ extern "C" {
  * Issuer nonce.
  */
 struct ecdaa_issuer_nonce_ZZZ {
-    uint8_t sc[4 + MODBYTES_XXX];
-    BIG_XXX yc;
+    uint8_t m[MODBYTES_XXX];
     ECP_ZZZ B;
 };
 
-#define ECDAA_ISSUER_NONCE_ZZZ_LENGTH (4 + MODBYTES_XXX + MODBYTES_XXX)
+#define ECDAA_ISSUER_NONCE_ZZZ_LENGTH (MODBYTES_XXX + (2*MODBYTES_XXX + 1))
 size_t ecdaa_issuer_nonce_ZZZ_length(void);
-
-#define ECDAA_ISSUER_NONCE_ZZZ_M_LENGTH (MODBYTES_XXX)
-size_t ecdaa_issuer_nonce_ZZZ_m_length(void);
-
-/*
- * Access the `m` part of the nonce.
- *
- * On return, `m_out` is set to the beginning of the `m` buffer.
- */
-void ecdaa_issuer_nonce_ZZZ_access_m(const uint8_t **m_out,
-                                     const struct ecdaa_issuer_nonce_ZZZ *nonce);
 
 /*
  * Generate a fresh `ecdaa_issuer_nonce_ZZZ`.

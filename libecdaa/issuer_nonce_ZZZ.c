@@ -22,55 +22,22 @@
 
 #include "amcl-extensions/ecp_ZZZ.h"
 
-#include <ecdaa/group_public_key_ZZZ.h>
-
-static
-int ecdaa_issuer_nonce_ZZZ_compute_B(struct ecdaa_issuer_nonce_ZZZ *nonce);
-
-
 size_t ecdaa_issuer_nonce_ZZZ_length(void) {
     return ECDAA_ISSUER_NONCE_ZZZ_LENGTH;
-}
-
-size_t ecdaa_issuer_nonce_ZZZ_m_length(void) {
-    return ECDAA_ISSUER_NONCE_ZZZ_M_LENGTH;
-}
-
-void ecdaa_issuer_nonce_ZZZ_access_m(const uint8_t **m_out,
-                                     const struct ecdaa_issuer_nonce_ZZZ *nonce)
-{
-    *m_out = nonce->sc + 4;
 }
 
 int ecdaa_issuer_nonce_ZZZ_generate(struct ecdaa_issuer_nonce_ZZZ *nonce_out,
                                     ecdaa_rand_func get_random)
 {
-    BIG_XXX curve_order;
-    BIG_XXX_rcopy(curve_order, CURVE_Order_ZZZ);
-
     // 1) Choose random m <- Z_p
-    BIG_XXX m;
-    ecp_ZZZ_random_mod_order(&m, get_random);
+    BIG_XXX m_as_big;
+    ecp_ZZZ_random_mod_order(&m_as_big, get_random);
 
-    // 2) Copy m into sc
-    BIG_XXX_toBytes((char*)(nonce_out->sc + 4), m);
+    // 2) Serialize m
+    BIG_XXX_toBytes((char*)nonce_out->m, m_as_big);
 
-    // 3) Find (sc, yc)
-    //      (this also sets B = ecp_fromhash(m))
-    uint16_t sc_length_ignore;
-    int hash_ret = ecp_ZZZ_fromhash_pre(&nonce_out->B,
-                                        nonce_out->sc,
-                                        &sc_length_ignore,
-                                        nonce_out->sc + 4,  // TODO: Don't double-copy
-                                        MODBYTES_XXX);
-    if (0 != hash_ret)
-        return hash_ret;
-
-    // 3i) Extract yc from the generated_point
-    BIG_XXX x_ignore;
-    ECP_ZZZ_get(x_ignore, nonce_out->yc, &nonce_out->B);  // TODO: Don't double-copy
-
-    return 0;
+    // 3) Calculate B = G1_fromhash(m)
+    return ecp_ZZZ_fromhash(&nonce_out->B, nonce_out->m, sizeof(nonce_out->m));
 }
 
 // void ecdaa_issuer_public_key_ZZZ_serialize(uint8_t *buffer_out,
@@ -167,18 +134,35 @@ int ecdaa_issuer_nonce_ZZZ_generate(struct ecdaa_issuer_nonce_ZZZ *nonce_out,
 //     return SUCCESS;
 // }
 
-int ecdaa_issuer_nonce_ZZZ_compute_B(struct ecdaa_issuer_nonce_ZZZ *nonce)
-{
-    // B = (Hash(sc), yc) from an `ecdaa_issuer_nonce`
+// TODO: For serialization:
+//     // 2) Copy m into sc
+//     BIG_XXX_toBytes((char*)(nonce_out->sc + 4), m);
+// 
+//     // 3) Find (sc, yc)
+//     //      (this also sets B = ecp_fromhash(m))
+//     uint16_t sc_length_ignore;
+//     int hash_ret = ecp_ZZZ_fromhash_pre(&nonce_out->B,
+//                                         nonce_out->sc,
+//                                         &sc_length_ignore,
+//                                         nonce_out->sc + 4,  // TODO: Don't double-copy
+//                                         MODBYTES_XXX);
+//     if (0 != hash_ret)
+//         return hash_ret;
+// 
+//     // 3i) Extract yc from the generated_point
+//     BIG_XXX x_ignore;
+//     ECP_ZZZ_get(x_ignore, nonce_out->yc, &nonce_out->B);  // TODO: Don't double-copy
+// 
+//
+//
+//    // B = (Hash(sc), yc) from an `ecdaa_issuer_nonce`
+//
+//    // 1) Compute xc = Hash(sc)
+//    BIG_XXX x;
+//    big_XXX_from_hash(&x, nonce->sc, 4 + MODBYTES_XXX);
+//
+//    // 2) Compute B as (xc, yc)
+//    if (!ECP_ZZZ_set(&nonce->B, x, nonce->yc)) {
+//        return -1;
+//    }
 
-    // 1) Compute xc = Hash(sc)
-    BIG_XXX x;
-    big_XXX_from_hash(&x, nonce->sc, 4 + MODBYTES_XXX);
-
-    // 2) Compute B as (xc, yc)
-    if (!ECP_ZZZ_set(&nonce->B, x, nonce->yc)) {
-        return -1;
-    }
-
-    return 0;
-}
