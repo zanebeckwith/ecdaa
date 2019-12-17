@@ -44,16 +44,14 @@ int ecdaa_member_key_pair_ZZZ_generate(struct ecdaa_member_public_key_ZZZ *pk,
     schnorr_keygen_from_basepoint_ZZZ(&pk->Q, &sk->sk, &nonce->B, get_random);
 
     // 2) and a Schnorr-type signature on the Schnorr-type public_key itself concatenated with the `m`-value of the nonce.
-    const uint8_t *m;
-    ecdaa_issuer_nonce_ZZZ_access_m(&m, nonce);
     ECP_ZZZ generator;
     ecp_ZZZ_set_to_generator(&generator);
     int sign_ret = schnorr_sign_ZZZ(&pk->c,
                                     &pk->s,
                                     &pk->n,
                                     NULL,
-                                    m,
-                                    ECDAA_ISSUER_NONCE_ZZZ_M_LENGTH,
+                                    nonce->m,
+                                    sizeof(nonce->m),
                                     &generator,
                                     &nonce->B,
                                     &pk->Q,
@@ -72,14 +70,12 @@ int ecdaa_member_public_key_ZZZ_validate(struct ecdaa_member_public_key_ZZZ *pk,
 
     ECP_ZZZ generator;
     ecp_ZZZ_set_to_generator(&generator);
-    const uint8_t *m;
-    ecdaa_issuer_nonce_ZZZ_access_m(&m, nonce);
     int sign_ret = schnorr_verify_ZZZ(pk->c,
                                       pk->s,
                                       pk->n,
                                       NULL,
-                                      m,
-                                      ECDAA_ISSUER_NONCE_ZZZ_M_LENGTH,
+                                      nonce->m,
+                                      sizeof(nonce->m),
                                       &generator,
                                       &nonce->B,
                                       &pk->Q,
