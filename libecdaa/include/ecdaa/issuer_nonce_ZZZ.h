@@ -50,27 +50,27 @@ size_t ecdaa_issuer_nonce_ZZZ_length(void);
 int ecdaa_issuer_nonce_ZZZ_generate(struct ecdaa_issuer_nonce_ZZZ *nonce_out,
                                     ecdaa_rand_func get_random);
 
-// /*
-//  * Serialize an `ecdaa_issuer_public_key_ZZZ`
-//  *
-//  * The serialized format is:
-//  *  ( gpk | c | sx | sy )
-//  *  where c, sx, and sy are zero-padded and in big-endian byte-order.
-//  *  Cf. `group_public_key_ZZZ.h` for the serialization of `gpk`.
-//  *
-//  * The provided buffer is assumed to be large enough.
-//  */
-// void ecdaa_issuer_public_key_ZZZ_serialize(uint8_t *buffer_out,
-//                                             struct ecdaa_issuer_public_key_ZZZ *ipk);
-// 
-// int ecdaa_issuer_public_key_ZZZ_serialize_fp(FILE *p,
-//                                             struct ecdaa_issuer_public_key_ZZZ *ipk);
-// 
-// int ecdaa_issuer_public_key_ZZZ_serialize_file(const char* file,
-//                                            struct ecdaa_issuer_public_key_ZZZ *ipk);
-// 
-// 
-// 
+/*
+ * Serialize an `ecdaa_issuer_nonce_ZZZ`
+ *
+ * The serialized format is:
+ *  ( sc | yc )
+ *  where sc and yc are the output of the `ecp_ZZZ_fromhash_pre` function
+ *  (cf. `amcl-extensions/ecp_ZZZ.h`).
+ *
+ * The provided buffer is assumed to be large enough.
+ */
+void ecdaa_issuer_nonce_ZZZ_serialize(uint8_t *buffer_out,
+                                      struct ecdaa_issuer_nonce_ZZZ *nonce);
+
+int ecdaa_issuer_nonce_ZZZ_serialize_fp(FILE *p,
+                                        struct ecdaa_issuer_nonce_ZZZ *nonce);
+
+int ecdaa_issuer_nonce_ZZZ_serialize_file(const char* file,
+                                          struct ecdaa_issuer_nonce_ZZZ *nonce);
+
+
+
 // /*
 //  * De-serialize an `ecdaa_issuer_public_key_ZZZ` and check its validity and signature.
 //  *

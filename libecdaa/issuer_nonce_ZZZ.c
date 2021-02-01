@@ -40,6 +40,17 @@ int ecdaa_issuer_nonce_ZZZ_generate(struct ecdaa_issuer_nonce_ZZZ *nonce_out,
     return ecp_ZZZ_fromhash(&nonce_out->B, nonce_out->m, sizeof(nonce_out->m));
 }
 
+void ecdaa_issuer_nonce_ZZZ_serialize(uint8_t *buffer_out,
+                                      struct ecdaa_issuer_nonce_ZZZ *nonce)
+{
+}
+
+int ecdaa_issuer_nonce_ZZZ_serialize_fp(FILE *p,
+                                        struct ecdaa_issuer_nonce_ZZZ *nonce);
+
+int ecdaa_issuer_nonce_ZZZ_serialize_file(const char* file,
+                                          struct ecdaa_issuer_nonce_ZZZ *nonce);
+
 // void ecdaa_issuer_public_key_ZZZ_serialize(uint8_t *buffer_out,
 //                                            struct ecdaa_issuer_public_key_ZZZ *ipk)
 // {
